@@ -70,89 +70,59 @@ LoadPalettesLoop:
   CPX #$20
   BNE LoadPalettesLoop  ;if x = $20, 32 bytes copied, all done
 
+  LDY #$00
   LDA #$80
-  STA P1YPos        ; put sprite 0 in center ($80) of screen vert
-  STA P1XPos        ; put sprite 0 in center ($80) of screen horiz
-  LDA #$00
-  STA P1Tile        ; tile number = 0
-  STA P1Attr        ; color = 0, no flipping
+  PHA 
+  PHA
 
-  LDA #$80
-  STA P1YPos+4        ; put sprite 0 in center ($80) of screen vert
-  LDA #$88
-  STA P1XPos+4        ; put sprite 0 in center ($80) of screen horiz
-  LDA #$02
-  STA P1Tile+4        ; tile number = 0
-  LDA #$00
-  STA P1Attr+4        ; color = 0, no flipping
+PlayerInit:
 
-  LDA #$80
-  STA P1YPos+8        ; put sprite 0 in center ($80) of screen vert
-  LDA #$90
-  STA P1XPos+8        ; put sprite 0 in center ($80) of screen horiz
-  LDA #$04
-  STA P1Tile+8        ; tile number = 0
+  TYA                 ; Transfer Counter to A
+  CLC
+  ROR A               ; Divide by 2 as tiles are 2 apart
+  STA P1Tile, Y       ; Set Tile number
   LDA #$00
-  STA P1Attr+8        ; color = 0, no flipping
+  STA P1Attr, Y       ; color = 0, no flipping
 
-  LDA #$90
-  STA P1YPos+12      ; put sprite 0 in center ($80) of screen vert
-  LDA #$80
-  STA P1XPos+12       ; put sprite 0 in center ($80) of screen horiz
-  LDA #$06
-  STA P1Tile+12       ; tile number = 0
-  LDA #$00
-  STA P1Attr+12       ; color = 0, no flipping
+  PLA
+  STA P1XPos, Y       ; put sprite 0 in center ($80) of screen vert
+  TAX
+  PLA
+  STA P1YPos, Y       ; put sprite 0 in center ($80) of screen horiz
+  PHA
+  TXA
+  CLC
+  ADC #$08
+  PHA
 
-  LDA #$90
-  STA P1YPos+16      ; put sprite 0 in center ($80) of screen vert
-  LDA #$88
-  STA P1XPos+16       ; put sprite 0 in center ($80) of screen horiz
-  LDA #$08
-  STA P1Tile+16       ; tile number = 0
-  LDA #$00
-  STA P1Attr+16       ; color = 0, no flipping
+  CPY #$20            ; if we have completed all player tiles skip to Draw
+  BEQ Draw
 
-  LDA #$90
-  STA P1YPos+20      ; put sprite 0 in center ($80) of screen vert
-  LDA #$90
-  STA P1XPos+20       ; put sprite 0 in center ($80) of screen horiz
-  LDA #$0A
-  STA P1Tile+20       ; tile number = 0
-  LDA #$00
-  STA P1Attr+20       ; color = 0, no flipping
+  TYA                 ; Increase the counter by 4 (size of sprite data)
+  CLC
+  ADC #$04
+  TAY
 
-  LDA #$A0
-  STA P1YPos+24      ; put sprite 0 in center ($80) of screen vert
-  LDA #$80
-  STA P1XPos+24       ; put sprite 0 in center ($80) of screen horiz
-  LDA #$0C
-  STA P1Tile+24       ; tile number = 0
-  LDA #$00
-  STA P1Attr+24       ; color = 0, no flipping
+  CPX #$90            ; Have we hit max P1XPos value?
+  BNE PlayerInit      ; If not loop
 
-  LDA #$A0
-  STA P1YPos+28      ; put sprite 0 in center ($80) of screen vert
-  LDA #$88
-  STA P1XPos+28       ; put sprite 0 in center ($80) of screen horiz
-  LDA #$0E
-  STA P1Tile+28       ; tile number = 0
-  LDA #$00
-  STA P1Attr+28       ; color = 0, no flipping
+  PLA
+  PLA
+  CLC
+  ADC #$10            ; Add 16 to Y Value
+  PHA
+  LDA #$80            ; Reset X to $80
+  PHA
 
-  LDA #$A0
-  STA P1YPos+32      ; put sprite 0 in center ($80) of screen vert
-  LDA #$90
-  STA P1XPos+32       ; put sprite 0 in center ($80) of screen horiz
-  LDA #$10
-  STA P1Tile+32       ; tile number = 0
-  LDA #$00
-  STA P1Attr+32       ; color = 0, no flipping
+  JMP PlayerInit      ; Loop
+
+Draw:
+  PLA
 
   LDA #(PPUCTRL_V | PPUCTRL_H)    ; enable NMI
   STA PPUCTRL
 
-  LDX #PPUMASK_s    ; enable sprites
+  LDX #PPUMASK_s     ; enable sprites
   STX PPUMASK
 
 
@@ -238,14 +208,13 @@ palette:
   NOP
   .org $FFFA     ;first of the three vectors starts here
   .dw NMI        ;when an NMI happens (once per frame if enabled) the 
-                   ;processor will jump to the label NMI:
+                 ;processor will jump to the label NMI:
   .dw RESET      ;when the processor first turns on or is reset, it will jump
-                   ;to the label RESET:
+                 ;to the label RESET:
   .dw 0          ;external interrupt IRQ is not used in this tutorial
   
 ;;;;;;;;;;;;;;  
   
   .bank 2
   .org $0000
-  ; .incbin "mario.chr"   ;includes 8KB graphics file from SMB1
   .incbin "chrrom.chr"
