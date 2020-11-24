@@ -70,9 +70,16 @@ LoadPalettesLoop:
   CPX #$20
   BNE LoadPalettesLoop  ;if x = $20, 32 bytes copied, all done
 
+PLAYER_IX = $80  ; Player Initial X Position
+PLAYER_IY = $80  ; Player Initial Y Position
+
+PLAYER_SX = $10  ; Player Pixel Size in X
+PLAYER_SY = $20  ; Player Pixel Size in Y
+
   LDY #$00
-  LDA #$80
+  LDA #PLAYER_IY
   PHA 
+  LDA #PLAYER_IX
   PHA
 
 PlayerInit:
@@ -103,8 +110,8 @@ PlayerInit:
   ADC #$04
   TAY
 
-  CPX #$90            ; Have we hit max P1XPos value?
-  BNE PlayerInit      ; If not loop
+  CPX #(PLAYER_IX + PLAYER_SX) ; Have we hit max P1XPos value?
+  BNE PlayerInit        ; If not loop
 
   PLA
   PLA
@@ -134,63 +141,41 @@ NMI:
   readJoy #$00
   STA Joy1
   
-MOVEUP:
+  LDX #$00
+MoveUp:
   LDA Joy1
   AND #BUTTON_UP
-  BEQ MOVEDOWN
-  DEC P1YPos
-  DEC P1YPos+4
-  DEC P1YPos+8
-  DEC P1YPos+12
-  DEC P1YPos+16
-  DEC P1YPos+20
-  DEC P1YPos+24
-  DEC P1YPos+28
-  DEC P1YPos+32
+  BEQ MoveDown
+  DEC P1YPos, X
 
-MOVEDOWN:
+MoveDown:
   LDA Joy1
   AND #BUTTON_DOWN
-  BEQ MOVELEFT
-  INC P1YPos
-  INC P1YPos+4
-  INC P1YPos+8
-  INC P1YPos+12
-  INC P1YPos+16
-  INC P1YPos+20
-  INC P1YPos+24
-  INC P1YPos+28
-  INC P1YPos+32
+  BEQ MoveLeft
+  INC P1YPos, X
 
-MOVELEFT:
+MoveLeft:
   LDA Joy1
   AND #BUTTON_LEFT
-  BEQ MOVERIGHT
-  DEC P1XPos
-  DEC P1XPos+4
-  DEC P1XPos+8
-  DEC P1XPos+12
-  DEC P1XPos+16
-  DEC P1XPos+20
-  DEC P1XPos+24
-  DEC P1XPos+28
-  DEC P1XPos+32
+  BEQ MoveRight
+  DEC P1XPos, X
 
-MOVERIGHT:
+MoveRight:
   LDA Joy1
   AND #BUTTON_RIGHT
-  BEQ MOVEDONE
-  INC P1XPos
-  INC P1XPos+4
-  INC P1XPos+8
-  INC P1XPos+12
-  INC P1XPos+16
-  INC P1XPos+20
-  INC P1XPos+24
-  INC P1XPos+28
-  INC P1XPos+32
+  BEQ MoveDone
+  INC P1XPos, X
 
-MOVEDONE:
+MoveDone:
+  CPX #$20
+  BEQ TXSprites
+  TXA
+  CLC
+  ADC #$04
+  TAX
+  JMP MoveUp
+
+TXSprites:
   LDA #SPRITEPAGE_LOW
   STA OAMADDR           ; set the low byte (00) of the RAM address
   LDA #SPRITEPAGE_HIGH
