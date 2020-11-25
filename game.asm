@@ -126,10 +126,10 @@ PlayerInit:
 Draw:
   PLA
 
-  LDA #(PPUCTRL_V | PPUCTRL_H)    ; enable NMI
+  LDA #(PPUCTRL_V | PPUCTRL_H)    ; enable NMI, sprite height of 8x16
   STA PPUCTRL
 
-  LDX #PPUMASK_s     ; enable sprites
+  LDX #PPUMASK_s | PPUMASK_b     ; enable sprites
   STX PPUMASK
 
 
